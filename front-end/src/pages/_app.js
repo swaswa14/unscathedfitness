@@ -7,6 +7,7 @@ function App({ Component, pageProps }) {
 
   const Layout = ({ children }) => {
     if (router.pathname.includes("dashboard")) {
+
       return <DashboardLayout>{children}</DashboardLayout>;
     } else {
       return <HomeLayout>{children}</HomeLayout>;
@@ -15,6 +16,10 @@ function App({ Component, pageProps }) {
 
   return (
     <Layout>
+      
+    <Headers>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests" />
+</Headers>
       <Component {...pageProps} />
     </Layout>
   );
