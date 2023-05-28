@@ -16,15 +16,22 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
 import Link from "next/link";
-import dashboardData, {dashBoardAction} from "@modules/utils/config";
+import dashboardData from "@modules/utils/config";
 import { Tooltip } from "@mui/material";
-import { logoutButton } from "@modules/utils/config";
-import { Copyright } from "@mui/icons-material";
 import DashboardPageLayout from "@modules/components/dashboard/DashboardPageLayout";
+import { useState, useEffect } from "react";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import EmailModal from "./dashboard/email-modal";
+import axios from "axios";
+import {useQuery} from "@tanstack/react-query";
+import {getAllMembers} from "@modules/components/members/new/AllMemberTable";
+import {getAllStaff} from "@modules/components/staff/all-staff-table";
 const drawerWidth = 240;
+import { useRouter } from 'next/navigation';
+
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -91,9 +98,52 @@ const Drawer = styled(MuiDrawer, {
   }),
 }));
 
+const MessageDrawer = ({ openDrawer, toggleDrawer }) => {
+  return (
+    <Drawer anchor={"bottom"} open={openDrawer} onClose={toggleDrawer}>
+      Hello!
+    </Drawer>
+  );
+};
+
 export default function DashboardLayout({ children }) {
   const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(true);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false)
+  const router = useRouter();
+
+
+  useEffect(() => {
+    // Get the token and role from session storage
+    const token = sessionStorage.getItem("token");
+    const role = sessionStorage.getItem("role");
+
+    // Check if token exists and if role is not Admin or SuperAdmin
+    if (!token && (role !== "Admin" || role !== "SuperAdmin")) {
+      // Redirect to "/"
+      router.push("/");
+    }
+  }, []);
+
+
+  const handleLogoutClick = (href, options) => {
+    alert("Logout clicked");
+    sessionStorage.clear();
+    router.push("/");
+  };
+
+
+  const { allMembers } = useQuery({
+    queryKey: ["all_members"],
+    queryFn: getAllMembers,
+  });
+
+  const {allStaff} = useQuery({
+    queryKey: ["all_staff"],
+    queryFn: getAllStaff,
+  });
+
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -103,87 +153,70 @@ export default function DashboardLayout({ children }) {
     setOpen(false);
   };
 
+  const toggleDrawer = () => {
+    setIsEmailModalOpen(!isEmailModalOpen);
+  };
+  const dashBoardAction = [
+    // {
+    //   name: "Email",
+    //   onClick: toggleDrawer,
+    //   tooltip: "Click to send email",
+    //   icon: <EmailRoundedIcon />,
+    // },
+    {
+      name: "Logout",
+      onClick: handleLogoutClick,
+      tooltip: "Click to logout",
+      icon: <LogoutRoundedIcon />,
+    },
+  ];
+
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      <AppBar position="fixed" open={open}>
-        <Toolbar>
-          <IconButton
+
+  <Box sx={{display: "flex"}}>
+    <CssBaseline/>
+    <AppBar position="fixed" open={open}>
+      <Toolbar>
+        <IconButton
             color="inherit"
             aria-label="open drawer"
             onClick={handleDrawerOpen}
             edge="start"
             sx={{
               marginRight: 5,
-              ...(open && { display: "none" }),
+              ...(open && {display: "none"}),
             }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            {process.env.companyName}
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Drawer variant="permanent" open={open}>
-        <DrawerHeader>
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === "rtl" ? (
-              <ChevronRightIcon />
-            ) : (
-              <ChevronLeftIcon />
-            )}
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        <List>
-          {dashboardData.map((page, index) => (
+        >
+          <MenuIcon/>
+        </IconButton>
+        <Typography variant="h6" noWrap component="div">
+          {process.env.companyName}
+        </Typography>
+      </Toolbar>
+    </AppBar>
+    <Drawer variant="permanent" open={open}>
+      <DrawerHeader>
+        <IconButton onClick={handleDrawerClose}>
+          {theme.direction === "rtl" ? (
+              <ChevronRightIcon/>
+          ) : (
+              <ChevronLeftIcon/>
+          )}
+        </IconButton>
+      </DrawerHeader>
+      <Divider/>
+      <List>
+        {dashboardData.map((page, index) => (
             <Tooltip key={index} title={page.tooltip}>
               <ListItem
-                key={page.name}
-                disablePadding
-                sx={{ display: "block" }}
+                  key={page?.name}
+                  disablePadding
+                  sx={{display: "block"}}
               >
                 <Link
-                  href={page.link}
-                  passHref
-                  style={{ textDecoration: "none", color: "black" }}
-                >
-                  <ListItemButton
-                    sx={{
-                      minHeight: 48,
-                      justifyContent: open ? "initial" : "center",
-                      px: 2.5,
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 0,
-                        mr: open ? 3 : "auto",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {page.icon}
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={page.name}
-                      sx={{ opacity: open ? 1 : 0 }}
-                    />
-                  </ListItemButton>
-                </Link>
-              </ListItem>
-            </Tooltip>
-          ))}
-        </List>
-        <Divider />
-        <List>
-          {dashBoardAction.map((page,index)=>(
-
-              <Tooltip title={page.tooltip}>
-                <ListItem
-                    key={index}
-                    disablePadding
-                    sx={{ display: "block" }}
+                    href={page.link}
+                    passHref
+                    style={{textDecoration: "none", color: "black"}}
                 >
                   <ListItemButton
                       sx={{
@@ -191,7 +224,6 @@ export default function DashboardLayout({ children }) {
                         justifyContent: open ? "initial" : "center",
                         px: 2.5,
                       }}
-                      onClick={page.onClick}
                   >
                     <ListItemIcon
                         sx={{
@@ -203,20 +235,60 @@ export default function DashboardLayout({ children }) {
                       {page.icon}
                     </ListItemIcon>
                     <ListItemText
-                        primary={page.name}
-                        sx={{ opacity: open ? 1 : 0 }}
+                        primary={page?.name}
+                        sx={{opacity: open ? 1 : 0}}
                     />
                   </ListItemButton>
-                </ListItem>
-              </Tooltip>
-          ))}
-
-        </List>
-      </Drawer>
-      <Box component="main">
-        <DrawerHeader />
-        <DashboardPageLayout>{children}</DashboardPageLayout>
-      </Box>
+                </Link>
+              </ListItem>
+            </Tooltip>
+        ))}
+      </List>
+      <Divider/>
+      <List className=" space-y-4">
+        {dashBoardAction.map((page, index) => (
+            <Tooltip title={page.tooltip}>
+              <ListItem key={index} disablePadding sx={{display: "block"}}>
+                <ListItemButton
+                    sx={{
+                      minHeight: 48,
+                      justifyContent: open ? "initial" : "center",
+                      px: 2.5,
+                    }}
+                    onClick={() => page.onClick()}
+                >
+                  <ListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 3 : "auto",
+                        justifyContent: "center",
+                      }}
+                  >
+                    {page.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                      primary={page?.name}
+                      sx={{opacity: open ? 1 : 0}}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
+        ))}
+      </List>
+    </Drawer>
+    <MessageDrawer/>
+    <Box component="main">
+      <DrawerHeader/>
+      <DashboardPageLayout>{children}</DashboardPageLayout>
     </Box>
+
+    <EmailModal
+        isEmailModalOpen={isEmailModalOpen}
+        setIsEmailModalOpen={setIsEmailModalOpen}
+        allMembers={allMembers?.data}
+        allStaff={allStaff?.data.all}
+    />
+  </Box>
+
   );
 }

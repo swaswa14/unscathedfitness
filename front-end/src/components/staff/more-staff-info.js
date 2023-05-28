@@ -4,14 +4,13 @@ import { TextField, FormControlLabel, Switch, Grid } from "@mui/material";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import MyButton from "@modules/components/ui/MyButton";
-import MyCustomAccordion from "@modules/components/members/new/MyCustomAccordion";
 import { QueryClient, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 
-export const updateMember = async (data) => {
+export const updateStaff = async (data) => {
   try {
     const res = await axios.put(
-      process.env.update_member_api.replace("{id}", data.id),
+      process.env.update_staff_api.replace("{id}", data.id),
       data,
       {
         headers: {
@@ -29,12 +28,11 @@ export const updateMember = async (data) => {
   }
 };
 
-const MoreInformation = ({ data, refetchTransactions }) => {
+const MoreStaffInfo = ({ data, refetchTransaction }) => {
   const [editable, setEditable] = useState(false);
   const [formData, setFormData] = useState(data);
   const [isLoading, setLoading] = useState(false);
   const queryClient = new QueryClient();
-
   const formattedData = {
     id: data?.id,
     firstName: formData?.firstName,
@@ -48,15 +46,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
     occupation: formData?.occupation,
     birthday: formData?.birthday,
   };
-
-  const editMembersMutation = useMutation({
-    mutationFn: updateMember,
-    onSuccess: () => {
-      setLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["all_members"] });
-      refetchTransactions();
-    },
-  });
 
   const handleInputChange = (event) => {
     const { name, value } = event.target;
@@ -77,15 +66,23 @@ const MoreInformation = ({ data, refetchTransactions }) => {
     setEditable(!editable);
   };
 
-  const onSubmit = (e) => {
+  const handleSaveChanges = (e) => {
     e.preventDefault();
-    setLoading(true);
+    setLoading(true); // Start the loading animation
 
     setTimeout(() => {
-      editMembersMutation.mutate(formattedData);
+      editStaffMutation.mutate(formattedData);
     }, 1000);
   };
 
+  const editStaffMutation = useMutation({
+    mutationFn: updateStaff,
+    onSuccess: () => {
+      setLoading(false);
+      queryClient.invalidateQueries({ queryKey: ["all_staff"] });
+      refetchTransaction();
+    },
+  });
   return (
     <Grid
       container
@@ -100,7 +97,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id={"firstName"}
           label="First Name"
           name="firstName"
           value={formData?.firstName}
@@ -113,16 +109,14 @@ const MoreInformation = ({ data, refetchTransactions }) => {
         <TextField
           label="Last Name"
           name="lastName"
-          id={"lastName"}
           value={formData?.lastName}
+          onChange={handleInputChange}
           disabled={!editable}
           fullWidth
-          onChange={handleInputChange}
         />
       </Grid>
       <Grid item xs={12}>
         <TextField
-          id={"email"}
           label="Email"
           name="email"
           value={formData?.email}
@@ -133,7 +127,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id={"address"}
           label="Address"
           name="address"
           value={formData?.address}
@@ -144,7 +137,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id={"weight"}
           label="Weight"
           name="weight"
           value={formData?.weight}
@@ -155,7 +147,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id={"height"}
           label="Height"
           name="height"
           value={formData?.height}
@@ -166,7 +157,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id={"phone"}
           label="Contact Number"
           name="phone"
           value={formData?.phone}
@@ -177,10 +167,9 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
       <Grid item xs={12} sm={6}>
         <TextField
-          id="occupation"
-          label="Occupation"
-          name="occupation"
-          value={formData?.occupation}
+          label="Position"
+          name="position"
+          value={formData?.position}
           onChange={handleInputChange}
           disabled={!editable}
           fullWidth
@@ -201,7 +190,6 @@ const MoreInformation = ({ data, refetchTransactions }) => {
             Birthday
           </label>
           <DatePicker
-            id="birthday"
             label="Birthday"
             name="birthday"
             value={formData?.birthday}
@@ -215,7 +203,7 @@ const MoreInformation = ({ data, refetchTransactions }) => {
       </Grid>
 
       <Grid className=" w-full space-y-4">
-        <MyButton disabled={!editable} onClick={(e) => onSubmit(e)}>
+        <MyButton disabled={!editable} onClick={(e) => handleSaveChanges(e)}>
           Save Changes
         </MyButton>
         {isLoading && (
@@ -225,34 +213,12 @@ const MoreInformation = ({ data, refetchTransactions }) => {
             </div>
           </div>
         )}
-        <MyCustomAccordion
-          data={[
-            {
-              title: "MEMBERSHIP",
-              status: formData?.membershipStatus,
-              startDate: formData?.membershipStartDate,
-              endDate: formData?.membershipEndDate,
-            },
-            {
-              title: "MONTHLY",
-              status: formData?.monthlySubscriptionStatus,
-              startDate: formData?.monthlySubscriptionStartDate,
-              endDate: formData?.monthlySubscriptionEndDate,
-            },
-            {
-              title: "STUDENT",
-              status: formData?.studentStatus,
-              startDate: formData?.studentStartDate,
-              endDate: formData?.studentEndDate,
-            },
-          ]}
-        />
       </Grid>
     </Grid>
   );
 };
 
-MoreInformation.propTypes = {
+MoreStaffInfo.propTypes = {
   data: PropTypes.shape({
     id: PropTypes.string,
     firstName: PropTypes.string,
@@ -262,19 +228,12 @@ MoreInformation.propTypes = {
     weight: PropTypes.string,
     height: PropTypes.string,
     phone: PropTypes.string,
-    occupation: PropTypes.string,
+    position: PropTypes.string,
     birthday: PropTypes.instanceOf(Date),
-    active: PropTypes.bool,
-    membershipStartDate: PropTypes.instanceOf(Date),
-    membershipEndDate: PropTypes.instanceOf(Date),
-    monthlySubscriptionStartDate: PropTypes.instanceOf(Date),
-    monthlySubscriptionEndDate: PropTypes.instanceOf(Date),
-    studentStartDate: PropTypes.instanceOf(Date),
-    studentEndDate: PropTypes.instanceOf(Date),
-    membershipStatus: PropTypes.string,
-    monthlySubscriptionStatus: PropTypes.string,
-    studentStatus: PropTypes.string,
+    status: PropTypes.string,
+    dateStarted: PropTypes.instanceOf(Date),
+    gender: PropTypes.string,
   }).isRequired,
 };
 
-export default MoreInformation;
+export default MoreStaffInfo;

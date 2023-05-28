@@ -4,15 +4,11 @@ import HomeSection from "@modules/components/home/HomeSection";
 
 const index = () => {
   return (
-      <>
-          <title>Home</title>
-          <section className=" md:h-screen bg-white md:snap-mandatory md:snap-y md:overflow-scroll md:snap-always  md:scroll-pt-[87px] ">
-              <HomeSection id="home" />
-              <AboutSection id="about" />
-              <ContactSection id="contact" className="md:mb-[194.17px]" />
-          </section>
-      </>
-
+    <section className=" md:h-screen bg-white md:snap-mandatory md:snap-y md:overflow-scroll md:snap-always  md:scroll-pt-[87px] ">
+      <HomeSection id="home" />
+      <AboutSection id="about" />
+      <ContactSection id="contact" className="md:mb-[194.17px]" />
+    </section>
   );
 };
 
