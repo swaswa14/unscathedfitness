@@ -111,7 +111,9 @@ export const PendingRegistrationContent = ({ className, ...props }) => {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          // Additional headers if required
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST",
         },
       }
     )
